@@ -11,7 +11,12 @@
         <div class="w-full flex justify-end">
             <a class="bg-red-500 rounded-md px-3 py-2 text-sm mb-5 inline-block" href="/logout">Logout</a>
         </div>
-        <h3 class="text-3xl mb-5"><span class="font-light">Hello</span>, <%= user.name %></h3>
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-md overflow-hidden">
+                <img class="w-full h-full object-cover" src="/images/uploads/<%= user.profilepic %>" alt="">
+            </div>
+            <h3 class="text-3xl mb-5"><span class="font-light">Hello</span>, <%= user.name %></h3>
+        </div>
         <h5 class="mb-5">You can create a new post.</h5>
 
         <form action="/post" method="post">
