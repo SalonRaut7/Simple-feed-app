@@ -5,6 +5,7 @@ const postModel = require('./models/post');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const post = require('./models/post');
 
 app.set('view engine', 'ejs');
 app.use(express.json());
@@ -24,10 +25,22 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 })
 
-app.get('/profile', isLoggedIn ,(req,res)=>{
-    console.log(req.user);
-    res.redirect('/login');
+app.get('/profile', isLoggedIn ,async (req,res)=>{
+    let user = await userModel.findOne({ email: req.user.email}).populate('posts');//whatever the postid user has, it will populate it into content
+    res.render('profile', {user});
 })
+
+app.post('/post', isLoggedIn ,async (req,res)=>{
+    let user = await userModel.findOne({ email: req.user.email});
+    let {content} = req.body;
+    let post = await postModel.create({
+        user: user._id,
+        content
+    });
+    user.posts.push(post._id);
+    await user.save();
+    res.redirect('/profile');
+});
 
 app.post('/register', async (req, res) => {
     let { name, age, email, password, username } = req.body;
@@ -61,7 +74,7 @@ app.post('/login', async (req, res) => {
         if(result) {
             let token = jwt.sign({email: email, userid: user._id}, 'secret');
             res.cookie('token', token);
-            res.status(200).send('You can login');
+            res.status(200).redirect('/profile');
         } 
         else res.redirect('/login');
     })
@@ -70,7 +83,7 @@ app.post('/login', async (req, res) => {
 
 //middleware for protected routes.
 function isLoggedIn(req,res,next){
-    if(req.cookies.token === '') res.send("you must be logged in");
+    if(req.cookies.token === '') res.redirect('/login');
     else{
         let data = jwt.verify(req.cookies.token, 'secret');
         req.user = data;
